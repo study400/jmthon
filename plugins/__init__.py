@@ -19,7 +19,7 @@ DEVLIST = [1280124974]
 def inline_pic(get=False):
     INLINE_PIC = JmdB.get_key("INLINE_PIC")
     if (INLINE_PIC is None) or get:
-        return "https://files.catbox.moe/mkpve6.webp"
+        return "https://files.catbox.moe/bk64x4.jpg"
     elif INLINE_PIC:
         return INLINE_PIC
 
