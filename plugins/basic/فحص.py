@@ -36,7 +36,7 @@ alive_txt = """
   ❃ أصدار التليليثون - {}
 """
 
-PING_PIC = JmdB.get_key("PING_PIC") or "https://files.catbox.moe/mkpve6.webp"
+PING_PIC = JmdB.get_key("PING_PIC") or "https://files.catbox.moe/bk64x4.jpg"
 JM_TXT = "ابتسم فهناك شتاء قادم وصباحات ٌممطرةٌ . ."
 
 
@@ -65,7 +65,7 @@ async def alive_func(e):
         inline = True
     OWNER_NAME = jmubot.me.first_name
 
-    pic = jmdB.get_key("ALIVE_PIC") or "https://files.catbox.moe/mkpve6.webp"
+    pic = jmdB.get_key("ALIVE_PIC") or "https://files.catbox.moe/bk64x4.jpg"
     if isinstance(pic, list):
         pic = choice(pic)
     uptime = time_formatter((time.time() - start_time) * 1000)
