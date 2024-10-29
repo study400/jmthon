@@ -1,5 +1,5 @@
 # not complete
-# by ~ @R0RR7
+# by ~ @R0R77
 # for ~ @Jmthon
 
 kz = [
