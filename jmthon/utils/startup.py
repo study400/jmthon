@@ -41,7 +41,7 @@ async def inline_on():
 
 async def notify():
     from .. import tgbot, JmdB, jmubot
-    chat_id = JmdB.get_config("LOG_CHAT")
+    chat_id = JmdB.get_key("LOG_CHAT")
     spam_sent, BTTS = None, None
     
     if not JmdB.get_key("FIRST_DEPLOY"):
