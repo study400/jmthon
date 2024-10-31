@@ -10,23 +10,19 @@
 ⌔∮ ملاحظة: سورس جمثون يقوم بحفظ الصور و الفيديوهات و الصوتيات ذاتية التدمير الى مجموعة التخزين بشكل تلقائي وكذلك يقوم بحفظ التاك في كروب التخزين
 """
 import os
-import re
 
 from telethon import events
-from telethon.errors.rpcerrorlist import (
-    ChannelPrivateError,
-    ChatWriteForbiddenError,
-    MediaCaptionTooLongError,
-    MediaEmptyError,
-    MessageTooLongError,
-    PeerIdInvalidError,
-    UserNotParticipantError,
-)
-from telethon.tl.types import MessageEntityMention, MessageEntityMentionName, User
-from telethon.utils import get_display_name
+from telethon.errors import (ChatWriteForbiddenError, MediaCaptionTooLongError,
+                             MediaEmptyError, MessageTooLongError,
+                             PeerIdInvalidError, UserNotParticipantError)
 from telethon.tl.custom import Button
-from .. import LOGS, tgbot, jmdB, jmubot, jmthon_cmd, callback, inline_mention
+from telethon.tl.types import (MessageEntityMention, MessageEntityMentionName,
+                               User)
+from telethon.utils import get_display_name
+
+from .. import LOGS, tgbot, JmdB, jmubot, jmthon_cmd
 from database.core.settings import KeySettings
+
 
 CACHE_SPAM = {}
 TAG_EDITS = {}
@@ -86,19 +82,18 @@ async def permitpmhandler(event):
     await event.forward_to(jmdB.get_key("TAG_CHAT") or LOG_CHAT)
 
 
-
 @jmubot.on(
     events.NewMessage(
         incoming=True,
-        func=lambda e: (e.mentioned) and jmdB.get_key("TAG_CHAT"),
+        func=lambda e: (e.mentioned) and JmdB.get_key("TAG_CHAT"),
     ),
 )
 async def all_messages_catcher(e):
     x = await e.get_sender()
     if isinstance(x, User) and (x.bot or x.verified):
         return
-    NEEDTOLOG = jmdB.get_key("TAG_CHAT")
-    LOG_CHAT = jmdB.get_config("LOG_CHAT")
+    LOG_CHAT = JmdB.get_config("LOG_CHAT")
+    NEEDTOLOG = JmdB.get_key("TAG_CHAT")
     buttons = await parse_buttons(e)
     try:
         sent = await tgbot.send_message(NEEDTOLOG, e.message, buttons=buttons)
@@ -106,7 +101,7 @@ async def all_messages_catcher(e):
             TAG_EDITS[e.chat_id].update({e.id: {"id": sent.id, "msg": e}})
         else:
             TAG_EDITS.update({e.chat_id: {e.id: {"id": sent.id, "msg": e}}})
-        tag_add(sent.id, e.chat_id, e.id)
+#        tag_add(sent.id, e.chat_id, e.id)
     except MediaEmptyError as er:
         LOGS.debug(f"handling {er}.")
         try:
@@ -116,7 +111,7 @@ async def all_messages_catcher(e):
                 TAG_EDITS[e.chat_id].update({e.id: {"id": sent.id, "msg": e}})
             else:
                 TAG_EDITS.update({e.chat_id: {e.id: {"id": sent.id, "msg": e}}})
-            tag_add(sent.id, e.chat_id, e.id)
+#            tag_add(sent.id, e.chat_id, e.id)
         except Exception as me:
             if not isinstance(me, (PeerIdInvalidError, ValueError)):
                 LOGS.exception(me)
@@ -140,7 +135,7 @@ async def all_messages_catcher(e):
             CACHE_SPAM[NEEDTOLOG]
         except KeyError:
             await tgbot.send_message(
-                jmdB.get_key("LOG_CHAT"), "**⌔∮ ايدي مجموعة التخزين غير صحيح يرجى تعديله**"
+                JmdB.get_key("LOG_CHAT"), "**⌔∮ ايدي مجموعة التخزين غير صحيح يرجى تعديله**"
             )
             CACHE_SPAM.update({NEEDTOLOG: True})
     except ChatWriteForbiddenError:
@@ -158,7 +153,7 @@ async def all_messages_catcher(e):
         LOGS.exception(er)
 
 
-if jmdB.get_key("TAG_CHAT"):
+if JmdB.get_key("TAG_CHAT"):
 
     @jmubot.on(events.MessageEdited(func=lambda x: not x.out))
     async def upd_edits(event):
@@ -166,7 +161,7 @@ if jmdB.get_key("TAG_CHAT"):
         if isinstance(x, User) and (x.bot or x.verified):
             return
         if event.chat_id not in TAG_EDITS:
-            if event.sender_id == jmdB.get_key("TAG_CHAT"):
+            if event.sender_id == JmdB.get_key("TAG_CHAT"):
                 return
             if event.is_private:
                 return
@@ -184,7 +179,7 @@ if jmdB.get_key("TAG_CHAT"):
                     text = f"**#معدلة & #تاك**\n\n{event.text}"
                     try:
                         sent = await tgbot.send_message(
-                            jmdB.get_key("TAG_CHAT"),
+                            JmdB.get_key("TAG_CHAT"),
                             text,
                             buttons=await parse_buttons(event),
                         )
@@ -210,7 +205,7 @@ if jmdB.get_key("TAG_CHAT"):
         if d_["count"] > 10:
             return
         try:
-            MSG = await tgbot.get_messages(jmdB.get_key("TAG_CHAT"), ids=d_["id"])
+            MSG = await tgbot.get_messages(JmdB.get_key("TAG_CHAT"), ids=d_["id"])
         except Exception as er:
             return LOGS.exception(er)
         TEXT = MSG.text
@@ -230,86 +225,6 @@ if jmdB.get_key("TAG_CHAT"):
             del TAG_EDITS[event.chat_id][event.id]
         except Exception as er:
             LOGS.exception(er)
-
-    @jmubot.on(
-        events.NewMessage(
-            outgoing=True,
-            chats=[jmdB.get_key("TAG_CHAT")],
-            func=lambda e: e.reply_to,
-        )
-    )
-    async def idk(e):
-        id = e.reply_to_msg_id
-        chat, msg = who_tag(id)
-        if chat and msg:
-            try:
-                await jmubot.send_message(chat, e.message, reply_to=msg)
-            except BaseException as er:
-                LOGS.exception(er)
-
-
-
-async def when_added_or_joined(event):
-    user = await event.get_user()
-    chat = await event.get_chat()
-    if not (user and user.is_self):
-        return
-    if getattr(chat, "username", None):
-        chat = f"[{chat.title}](https://t.me/{chat.username}/{event.action_message.id})"
-    else:
-        chat = f"[{chat.title}](https://t.me/c/{chat.id}/{event.action_message.id})"
-    key = "bot" if event.client._bot else "user"
-    buttons = Button.inline(
-        "مغادرة الدردشة", data=f"leave_ch_{event.chat_id}|{key}"
-    )
-    if event.user_added:
-        tmp = event.added_by
-        text = f"**#اضافة_مستخدمين\n\n❃ المستخدم: {inline_mention(tmp)} أضاف {inline_mention(user)} للدردشة {chat}.**"
-    elif event.from_request:
-        text = f"**#قبول_مستخدمين\n\n❃ المستخدم: {inline_mention(user)} تم قبوله في الدردشة {chat}.**"
-    else:
-        text = f"**#انضمام_مستخدمين\n\n❃ المستخدم: {inline_mention(user)} انضم للدردشة {chat}.**"
-    await tgbot.send_message(jmdB.get_key("LOG_CHAT"), text, buttons=buttons)
-
-
-tgbot.add_event_handler(
-    when_added_or_joined, events.ChatAction(func=lambda x: x.user_added)
-)
-jmubot.add_event_handler(
-    when_added_or_joined,
-    events.ChatAction(func=lambda x: x.user_added or x.user_joined),
-)
-_client = {"bot": tgbot, "user": jmubot}
-
-
-@callback(
-    re.compile(
-        "leave_ch_(.*)",
-    ),
-    from_users=[jmubot.uid],
-)
-async def leave_ch_at(event):
-    cht = event.data_match.group(1).decode("UTF-8")
-    ch_id, client = cht.split("|")
-    try:
-        client = _client[client]
-    except KeyError:
-        return
-    try:
-        name = (await client.get_entity(int(ch_id))).title
-        await client.delete_dialog(int(ch_id))
-    except UserNotParticipantError:
-        pass
-    except ChannelPrivateError:
-        return await event.edit(
-            "**⌔∮ لا يمكن الوصول لهذه الدردشة ربما غادرت او تم حظرك**"
-        )
-    except Exception as er:
-        LOGS.exception(er)
-        return await event.answer(str(er))
-    await event.edit("**⌔∮ غادر {}**".format(name))
-
-
 
 
 async def parse_buttons(event):
@@ -337,21 +252,3 @@ async def parse_buttons(event):
         else:
             buttons[-1].append(button)
     return buttons
-
-
-def get_stuff():
-    return jmdB.get_key("BOTCHAT") or {}
-
-def tag_add(msg, chat, user):
-    ok = get_stuff()
-    if not ok.get("TAG"):
-        ok.update({"TAG": {msg: [chat, user]}})
-    else:
-        ok["TAG"].update({msg: [chat, user]})
-    return jmdB.set_key("BOTCHAT", ok)
-
-def who_tag(msg):
-    ok = get_stuff()
-    if ok.get("TAG") and ok["TAG"].get(msg):
-        return ok["TAG"][msg]
-    return False, False
