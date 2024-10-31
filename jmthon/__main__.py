@@ -49,8 +49,7 @@ LOGS.info(
     ╚══════════════════════════════════════════╝
     """
 )
-if not JmdB.get_key("NOTIFY_OFF"):
-        jmubot.run_in_loop(notify())
+
     
 try:
     asst.run()
