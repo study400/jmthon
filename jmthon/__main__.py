@@ -24,6 +24,9 @@ if not jmubot.me.bot:
     jmdB.set_key("OWNER_ID", jmubot.me.id)
     jmdB.set_key("NAME", jmubot.full_name)
 
+jmubot.loop.create_task(tag_chat())
+jmubot.loop.create_task(group_ub())
+
 LOGS.info("جار تثبيت سورس جمثون ...")
 
 
@@ -41,8 +44,6 @@ async def load_plugins():
     load(path=["plugins/basic", "plugins/assistant","plugins/account","plugins/fun","plugins/group"])
 
 jmubot.run_in_loop(load_plugins())
-jmubot.loop.create_task(tag_chat())
-jmubot.loop.create_task(group_ub())
 
 
 LOGS.info(f"⏳ تم استغراق {time_formatter((time.time() - start_time) * 1000)} ميللي ثانية لبدء تشغيل سورس جمثون.")
