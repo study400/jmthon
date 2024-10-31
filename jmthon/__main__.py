@@ -12,9 +12,7 @@ from .utils import (
     tag_chat,
     inline_on,
     join_dev,
-    notify,
-    tag_chat, 
-    group_ub
+    main_process,
 )
 
 
@@ -24,16 +22,14 @@ if not jmubot.me.bot:
     jmdB.set_key("OWNER_ID", jmubot.me.id)
     jmdB.set_key("NAME", jmubot.full_name)
 
-jmubot.loop.create_task(tag_chat())
-jmubot.loop.create_task(group_ub())
 
 LOGS.info("جار تثبيت سورس جمثون ...")
 
 
 try:
-    LOGS.info("يتم تفعيل وضع الانلاين")
-    jmubot.loop.run_until_complete(inline_on())
-    LOGS.info("تم تفعيل وضع الانلاين بنجاح ✓")
+    LOGS.info("يتم أعداد الأعدادات")
+    jmubot.loop.run_until_complete(main_process())
+    LOGS.info("تم اعداد اعدادت سورس جمثون ✅")
 except Exception as meo:
     LOGS.error(f"- {meo}")
     sys.exit()
