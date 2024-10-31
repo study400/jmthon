@@ -1,2 +1,2 @@
-from .startup import group_ub, notify, inline_on, tag_chat
+from .startup import main_process
 from .extra import join_dev
