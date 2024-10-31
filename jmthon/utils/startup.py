@@ -252,3 +252,10 @@ async def tag_chat():
             await jmubot(EditPhotoRequest(int(tag_chat), pic))
         except BaseException as er:
             LOGS.exception(er)
+
+
+async def main_process():
+    await inline_on()
+    await group_ub()
+    await tag_chat()
+    await notify()
