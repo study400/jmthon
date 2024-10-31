@@ -8,9 +8,6 @@ from .core.helper import time_formatter#, bash
 from .load_plug import load
 from telethon.errors import SessionRevokedError
 from .utils import (
-    group_ub,
-    tag_chat,
-    inline_on,
     join_dev,
     main_process,
 )
