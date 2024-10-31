@@ -20,7 +20,7 @@ from telethon.tl.types import (MessageEntityMention, MessageEntityMentionName,
                                User)
 from telethon.utils import get_display_name
 
-from .. import LOGS, tgbot, JmdB, jmubot, jmthon_cmd
+from .. import LOGS, tgbot, JmdB, jmdB, jmubot, jmthon_cmd
 from database.core.settings import KeySettings
 
 
