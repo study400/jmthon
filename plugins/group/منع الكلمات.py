@@ -11,7 +11,7 @@
 
 from telethon import events
 
-from . import JmdB, jmubot, jmthon_cmd
+from .. import JmdB, jmubot, jmthon_cmd
 
 
 
