@@ -26,7 +26,7 @@ async def af(e):
     for z in heh:
         add_blacklist(int(chat), z.lower())
     jmubot.add_handler(blacklist, events.NewMessage(incoming=True))
-    await e.eor(f"**⌔∮ تم بنجاح أضافة الكلمة {} الى قائمة المنع**".format(moh))
+    await e.eor("**⌔∮ تم بنجاح أضافة الكلمة {} الى قائمة المنع**".format(moh))
 
 
 @jmthon_cmd(pattern="الغاء منع( (.*)|$)", admins_only=True)
@@ -39,7 +39,7 @@ async def ref(e):
     heh = moh.split(" ")
     for z in heh:
         rem_blacklist(int(chat), z.lower())
-    await e.eor(f"**⌔∮ تم بنجاح الغاء منع الكلمة {} والسماح بها**".format(moh))
+    await e.eor("**⌔∮ تم بنجاح الغاء منع الكلمة {} والسماح بها**".format(moh))
 
 
 @jmthon_cmd(pattern="قائمة المنع$", admins_only=True)
