@@ -6,6 +6,9 @@
 ❃ `{i}مكرر` <الوقت بين الارسال> <عدد الارسال> <الرسالة>
     لـ تكرار ارسال الرسالة بعدد معين في الدردشة لكن بين ارسال رسالة واخرى وقت معين جرب ارسل   `. مكرر 2 5 مرحبا`
 
+❃ `{i}فصخ`> جملة>
+   لـ تفصيخ الجملة وجعلها امام المستخدم تكتب بشكل حرف حرف
+   
 ❃ `{i}ايقاف مكرر`
    لـ ايقاف امر مكرر/مؤقت في الدردشة 
 
@@ -15,6 +18,23 @@
 import asyncio
 
 from .. import HNDLR, eod, jmthon_cmd, JmdB
+
+@jmthon_cmd(pattern="فصخ ([\s\S]*)")
+async def typewriter(typew):
+    message = typew.pattern_match.group(1)
+    sleep_time = 0.2
+    typing_symbol = "|"
+    old_text = ""
+    typew = await typew.eor(typing_symbol)
+    await asyncio.sleep(sleep_time)
+    for character in message:
+        old_text = old_text + "" + character
+        typing_text = old_text + "" + typing_symbol
+        await typew.eor(typing_text)
+        await asyncio.sleep(sleep_time)
+        await typew.eor(old_text)
+        await asyncio.sleep(sleep_time)
+
 
 
 @jmthon_cmd(pattern="سبام")
