@@ -4,7 +4,7 @@ import logging
 from jmthon.config import Var
 from .base import BaseDatabase
 
-Redis = psycopg2 = Database = None
+Redis = MongoClient = psycopg2 = Database = None
 LOGS = logging.getLogger("Jmthon")
 
 if Var.REDIS_URI or Var.REDISHOST:
@@ -15,6 +15,14 @@ if Var.REDIS_URI or Var.REDISHOST:
         os.system(f"{sys.executable} -m pip install -q redis hiredis")
         from redis import Redis
 
+elif Var.MONGO_URI:
+    try:
+        from pymongo import MongoClient
+    except ImportError:
+        LOGS.info("Installing 'pymongo' for database.")
+        os.system(f"{sys.executable} -m pip install -q pymongo[srv]")
+        from pymongo import MongoClient
+
 elif Var.DATABASE_URL:
     try:
         import psycopg2
@@ -24,6 +32,58 @@ elif Var.DATABASE_URL:
         os.system(f"{sys.executable} -m pip install -q psycopg2-binary")
         import psycopg2
         from psycopg2 import pool
+
+else:
+    try:
+        from .local import Database as localdb_
+    except ImportError:
+        LOGS.info("Using local file as database.")
+        os.system("pip3 install -q localdb.json")
+        from local import Database as localdb_
+
+class MongoDB(BaseDatabase):
+    def __init__(self, key, dbname="pyDatabase"):
+        self.dB = MongoClient(key, serverSelectionTimeoutMS=5000)
+        self.db = self.dB[dbname]
+        super().__init__()
+
+    def __repr__(self):
+        return f"<Jmthon.MonGoDB\n -total_keys: {len(self.keys())}\n>"
+
+    @property
+    def name(self):
+        return "MONGO"
+
+    @property
+    def usage(self):
+        return self.db.command("dbstats")["dataSize"]
+
+    def ping(self):
+        if self.dB.server_info():
+            return True
+
+    def keys(self):
+        return self.db.list_collection_names()
+
+    def set(self, key, value):
+        if key in self.keys():
+            self.db[key].replace_one({"_id": key}, {"value": str(value)})
+        else:
+            self.db[key].insert_one({"_id": key, "value": str(value)})
+        return True
+
+    def delete(self, key):
+        self.db.drop_collection(key)
+
+    def get(self, key):
+        if x := self.db[key].find_one({"_id": key}):
+            return x["value"]
+
+    def flushall(self):
+        self.dB.drop_database("pyDatabase")
+        self._cache.clear()
+        return True
+
 
 
 class SqlDB(BaseDatabase):
@@ -132,6 +192,38 @@ class RedisDB(BaseDatabase):
     def usage(self):
         return sum(self.db.memory_usage(x) for x in self.keys())
 
+class LocalDB(BaseDatabase):
+    def __init__(self, dbname="JmthonDB"):
+        self.dB = localdb_(database_name=dbname)
+        super().__init__()
+
+    def __repr__(self):
+        return f"<Jmthon.LocalDB\n -total_keys: {len(self.keys())}\n>"
+
+    @property
+    def name(self):
+        return "Local"
+
+    @property
+    def usage(self):
+        return self.dB.size
+
+    def keys(self):
+        return self.dB._cache.keys()
+
+    def set(self, key, value):
+        return self.dB.set(key, value)
+
+    def delete(self, key):
+        return self.dB.delete(key)
+
+    def get(self, key):
+        return self.dB.get(key)
+
+    def flushall(self):
+        for key in self.keys():
+            self.dB.delete(key)
+        return True
 
 def pyDatabase():
     _er = False
@@ -145,6 +237,8 @@ def pyDatabase():
                 socket_timeout=5,
                 retry_on_timeout=True,
             )
+        if MongoClient:
+            return MongoDB(Var.MONGO_URI)
         if psycopg2:
             return SqlDB(Var.DATABASE_URL)
     except BaseException as err:
@@ -152,8 +246,8 @@ def pyDatabase():
         _er = True
     if not _er:
         LOGS.critical(
-            "No DB requirement fullfilled!\nPlease install redis."
+            "No DB requirement fullfilled!\nnow use local db."
         )
-        return
-    sys.exit()
+        return LocalDB()
+    exit()
 
