@@ -1,0 +1,50 @@
+from pyrogram import Client, filters
+from realesrgan import RealESRGAN
+from PIL import Image
+import os
+
+# إعدادات البوت
+API_ID = 22257686  # ضع API_ID الخاص بك
+API_HASH = "6fe90d5beeb1f4b01ddc58eaeee45343"  # ضع API_HASH الخاص بك
+BOT_TOKEN = "8037285574:AAEGX5TgtFbZ5xr4jPdLdQC6hUQJ3aJj8mY"  # ضع توكن البوت الخاص بك
+
+# مسار مؤقت لحفظ الصور
+SAVE_PATH = "temp_images"
+os.makedirs(SAVE_PATH, exist_ok=True)
+
+# إنشاء البوت
+app = Client("ai_image_enhancer", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
+
+@app.on_message(filters.command("start") & filters.private)
+async def start_message(_, message):
+    await message.reply_text("مرحبًا! أرسل لي صورة وسأقوم بتحسين جودتها باستخدام الذكاء الاصطناعي. 🤖✨")
+
+@app.on_message(filters.private & filters.photo)
+async def enhance_image(_, message):
+    try:
+        # تنزيل الصورة
+        file_path = await message.download(file_name=SAVE_PATH)
+        image = Image.open(file_path)
+
+        # تحسين الصورة باستخدام Real-ESRGAN
+        with RealESRGAN("x4") as model:
+            enhanced_image = model.predict(image)
+
+        # حفظ الصورة المحسّنة
+        enhanced_path = file_path.replace(".jpg", "_enhanced.jpg")
+        enhanced_image.save(enhanced_path)
+
+        # إرسال الصورة المحسّنة
+        await message.reply_photo(enhanced_path, caption="🤖✨ تم تحسين الصورة باستخدام الذكاء الاصطناعي!")
+
+        # حذف الصور المؤقتة
+        os.remove(file_path)
+        os.remove(enhanced_path)
+
+    except Exception as e:
+        await message.reply_text(f"❌ حدث خطأ أثناء تحسين الصورة: {str(e)}")
+
+# تشغيل البوت
+if __name__ == "__main__":
+    print("✅ البوت يعمل الآن!")
+    app.run()
